@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+	xmlns:acks="http://namespace.hub.com/acknowledgment" 
+	targetNamespace="http://namespace.hub.com/acknowledgment" 
+	elementFormDefault="qualified" 
+	attributeFormDefault="qualified">
+	
+	<!-- ROOT Element -->
+	<xs:element name="Acknowledgment" type="acks:AcknowledgmentType"/>
+	
+	<!-- Element declarations -->
+	
+	<!-- Attribute declarations -->
+	<xs:attribute name="TypeOfAcknowledgment" type="acks:TypeOfAcknowledgmentType"/>
+	<xs:attribute name="References" type="xs:string"/>
+	<xs:attribute name="ID" type="xs:string"/>
+	<xs:attribute name="Timestamp" type="xs:dateTime"/>
+	
+	<!-- Simple types -->
+	<xs:simpleType name="TypeOfAcknowledgmentType">
+		<xs:restriction base="xs:token">
+			<xs:enumeration value="AcknowledgmentOfReceipt"/>
+			<xs:enumeration value="AcknowledgmentOfDelivery"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<!-- Complex types -->
+	<xs:complexType name="AcknowledgmentType">
+		<xs:sequence>
+			<xs:element ref="acks:Details" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute ref="acks:TypeOfAcknowledgment" use="required"/>
+		<xs:attribute ref="acks:ID" use="required"/>
+		<xs:attribute ref="acks:References" use="required"/>
+		<xs:attribute ref="acks:Timestamp" use="required"/>
+	</xs:complexType>
+	<xs:element name="Details" type="xs:string"/>
+	
+</xs:schema>

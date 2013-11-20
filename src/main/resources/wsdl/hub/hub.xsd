@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:fail="http://namespace.hub.com/failure"
+	xmlns:acks="http://namespace.hub.com/acknowledgment"
+	xmlns:tns="http://namespace.hub.com/hub"
+	targetNamespace="http://namespace.hub.com/hub" 
+	elementFormDefault="qualified" 
+	attributeFormDefault="qualified">
+	
+	<xs:import namespace="http://namespace.hub.com/acknowledgment" schemaLocation="Acknowledgment.xsd" />
+	<xs:import namespace="http://namespace.hub.com/failure" schemaLocation="Failure.xsd" />
+	
+	<!-- ROOT Elements -->
+	<xs:element name="DeliverMessageRequest" type="tns:DeliverMessageRequestType" />
+	<xs:element name="RevokeMessageRequest" type="tns:RevokeMessageRequestType" />
+	<xs:element name="ListMessagesRequest" type="tns:ListMessagesRequestType" />
+	<xs:element name="ListMessagesResponse" type="tns:ListMessagesResponseType" />
+	<xs:element name="GetMessageDetailRequest" type="tns:GetMessageDetailRequestType" />
+	<xs:element name="GetMessageDetailResponse" type="tns:GetMessageDetailResponseType" />
+	
+	<!-- Element declarations -->
+	<xs:element name="DeliveryParameters" type="tns:DeliveryParametersType" />
+	
+	<xs:complexType name="DeliveryParametersType">
+		<xs:sequence>
+			<xs:element name="Sender" type="xs:string" />
+			<xs:element name="Receiver" type="xs:string" />
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:simpleType name="MessageTypeType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ACKNOWLEDGMENT" />
+			<xs:enumeration value="MESSAGE" />
+			<xs:enumeration value="FAILURE" />
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="MimeTypeType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="XML" />
+			<xs:enumeration value="TEXT" />
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="MessageStatusType">
+    	<xs:restriction base="xs:string">
+    		<xs:enumeration value="REQUEST_RECEIVED" />
+        	<xs:enumeration value="RECEIVED" />
+        	<xs:enumeration value="DELIVERED" />
+        	<xs:enumeration value="EXCEPTION" />
+        	<xs:enumeration value="PROCESSED" />
+        	<xs:enumeration value="PROCESSING" />
+	   	</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:complexType name="MessagesInfoType">
+		<xs:sequence>
+			<xs:element name="MessageId" type="xs:string" />
+			<xs:element name="Sender" type="xs:string" />
+			<xs:element name="Receiver" type="xs:string" />
+			<xs:element name="ReceivedAt" type="xs:dateTime" />
+			<xs:element name="Status" type="tns:MessageStatusType" />
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="MessageDetailType">
+		<xs:sequence>
+			<xs:element name="MessageId" type="xs:string" />
+			<xs:element name="MessageType" type="tns:MessageTypeType" />
+			<xs:element name="MessageSize" type="xs:long" />
+			<xs:element name="MimeType" type="tns:MimeTypeType" />
+			<xs:element name="CharSet" type="xs:string" minOccurs="0" />
+			<xs:element name="ReceivedAt" type="xs:dateTime" />
+			<xs:element name="SenderUuid" type="xs:string" />
+			<xs:element name="SenderName" type="xs:string" />
+			<xs:element name="DeliveryAt" type="xs:dateTime" minOccurs="0" />
+			<xs:element name="ReceiverUuid" type="xs:string" />
+			<xs:element name="ReceiverName" type="xs:string" />					
+			<xs:element name="Status" type="tns:MessageStatusType" />
+			<xs:element name="DocumentReference" type="xs:string" minOccurs="0" />
+			<xs:element name="Failure" type="fail:FailureType" minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="AbstractRequestType" abstract="true">
+		<xs:sequence>
+			<xs:element name="RequestMetaData" minOccurs="1" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="AppKey" type="xs:string" minOccurs="1" maxOccurs="1" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="DeliverMessageRequestType">
+		<xs:complexContent>
+			<xs:extension base="tns:AbstractRequestType">
+				<xs:sequence>
+					<xs:element ref="tns:DeliveryParameters" />
+					<xs:element name="Message" type="xs:string" />
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="RevokeMessageRequestType">
+		<xs:complexContent>
+			<xs:extension base="tns:AbstractRequestType">
+				<xs:sequence>
+					<xs:element name="MessageId" type="xs:string">
+						<xs:annotation>
+							<xs:documentation>Die MessageId der Nachricht, die revoked werden soll.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	 
+	<xs:complexType name="ListMessagesRequestType">
+		<xs:complexContent>
+			<xs:extension base="tns:AbstractRequestType">
+				<xs:sequence>
+					<xs:element name="Limit" type="xs:int" minOccurs="0" maxOccurs="1" />
+					<xs:element name="Offset" type="xs:int" minOccurs="0" maxOccurs="1" />
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="ListMessagesResponseType">
+		<xs:sequence minOccurs="0" maxOccurs="30">
+			<xs:choice>
+				<xs:element name="MessageInfo" type="tns:MessagesInfoType" />
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="GetMessageDetailRequestType">
+		<xs:complexContent>
+			<xs:extension base="tns:AbstractRequestType">
+				<xs:sequence>
+					<xs:element name="MessageId" type="xs:string" minOccurs="1" maxOccurs="1" />
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="GetMessageDetailResponseType">
+		<xs:sequence>
+			<xs:element name="MessageDetail" type="tns:MessageDetailType" />
+		</xs:sequence>
+	</xs:complexType>
+
+</xs:schema>

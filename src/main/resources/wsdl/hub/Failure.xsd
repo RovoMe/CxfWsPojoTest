@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:failure="http://namespace.hub.com/failure"
+	targetNamespace="http://namespace.hub.com/failure"
+	elementFormDefault="qualified" attributeFormDefault="qualified">
+
+	<!-- ROOT Element -->
+	<xs:element name="Failure" type="failure:FailureType" />
+	
+	<!-- Element declarations -->
+	
+	<!-- Attribute declarations -->
+	<xs:attribute name="References" type="xs:string" />
+	<xs:attribute name="ID" type="xs:string" />
+	<xs:attribute name="Timestamp" type="xs:dateTime" />
+	
+	<!-- Simple types -->
+	
+	<!-- Complex types -->
+	<xs:complexType name="FailureType">
+		<xs:sequence>
+			<xs:element name="Code" type="xs:string" />
+			<xs:element name="Reason" type="xs:string" />
+			<xs:element name="Detail" type="xs:string" minOccurs="0" />
+		</xs:sequence>
+		<xs:attribute ref="failure:ID" use="required" />
+		<xs:attribute ref="failure:References" use="required" />
+		<xs:attribute ref="failure:Timestamp" use="required" />
+
+	</xs:complexType>
+</xs:schema>

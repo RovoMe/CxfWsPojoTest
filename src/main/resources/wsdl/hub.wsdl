@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" 
+	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+	xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+	
+	xmlns:acks="http://namespace.hub.com/acknowledgment" 
+	xmlns:fail="http://namespace.hub.com/failure"
+	xmlns:hub="http://namespace.hub.com/hub"
+	targetNamespace="http://namespace.hub.com/hub">
+		
+	<!-- ========================== Type Definitions ======================= -->
+	<wsdl:types>
+		<xs:schema>
+			<xs:import namespace="http://namespace.hub.com/hub" schemaLocation="hub/hub.xsd" />
+			<xs:import namespace="http://namespace.hub.com/acknowledgment" schemaLocation="hub/Acknowledgment.xsd" />
+			<xs:import namespace="http://namespace.hub.com/failure" schemaLocation="hub/Failure.xsd" />
+		</xs:schema>
+	</wsdl:types>
+	
+	<!--==================== DeliveryService.deliver ======================= 
+		Acknowledgment DeliveryService.deliver(AppKey, DeliveryParameters, ErpelMessage)
+		returns: an acknowledgment of receipt. At this stage the sender and 
+		         the receiver as well as the document type and the appkey are 
+		         checked.
+	    ==================================================================== 
+	-->
+	<wsdl:message name="deliverMessageRequest">
+		<wsdl:part name="in" element="hub:DeliverMessageRequest" />
+	</wsdl:message>
+	<wsdl:message name="deliverMessageResponse">
+		<wsdl:part name="out" element="acks:Acknowledgment" />
+	</wsdl:message>
+	
+	<!--=================== DeliveryService.listMessages ==================== 
+		MessageInfo[] DeliveryService.list(AppKey, int limit, int offset)
+		returns: a list of messages for the requesting user's company. 
+		         The returned messages only contain basic information on the
+		         message like the messageId, the sender's UUID, the receiver's 
+		         UUID, the date of receipt and the status of the message
+	    ==================================================================== 
+	-->
+	<wsdl:message name="listMessagesRequest">
+		<wsdl:part name="in" element="hub:ListMessagesRequest" />
+	</wsdl:message>
+	<wsdl:message name="listMessagesResponse">
+		<wsdl:part name="out" element="hub:ListMessagesResponse" />
+	</wsdl:message>
+
+	<!--================= DeliveryService.getMessageDetail ================= 
+		MessageDetail DeliveryService.listMessage(AppKey, MessageId)
+		returns: details for a specific message
+	    ==================================================================== 
+	-->
+	<wsdl:message name="getMessageDetailRequest">
+		<wsdl:part name="in" element="hub:GetMessageDetailRequest" />
+	</wsdl:message>
+	<wsdl:message name="getMessageDetailResponse">
+		<wsdl:part name="out" element="hub:GetMessageDetailResponse" />
+	</wsdl:message>	
+	
+	<!--========================== MessagingFault ========================== 
+		thrown if during receiving, listing, revoking or fetching messages 
+		an error occurred
+	    ==================================================================== 
+	-->
+	<wsdl:message name="MessagingFault">
+		<wsdl:part name="failure" element="fail:Failure" />
+	</wsdl:message>
+		
+	<!-- ======================== Endpoint definition =======================-->
+	<wsdl:portType name="DeliveryEndpoint">
+		<wsdl:operation name="deliverMessage">
+			<wsdl:documentation>Diese Operation liefert eine ErpelMessage ein und retourniert im Erfolgsfall ein Acknowledgment of Receipt. Im Fehlerfall wird
+				ein Fault zurückgegeben, der eine MessagingException beinhaltet. Die möglichen FehlerCodes der MessagingException sind unter
+				http://doku.erpel.at/doku.php?id=fehlercodes zu finden.
+			</wsdl:documentation>
+			<wsdl:input message="hub:deliverMessageRequest" />
+			<wsdl:output message="hub:deliverMessageResponse" />
+			<wsdl:fault name="MessagingFault" message="hub:MessagingFault" />
+		</wsdl:operation>
+		<wsdl:operation name="listMessages">
+			<wsdl:documentation>Diese Operation liefert eine Liste von Kurzinformationen zu allen gesendeten Nachrichten zurück. Gegenwärtig werden bis zu 
+				30 Nachrichten pro erhaltenen Request zurück geliefert. Über paging Parameter (limit und offset) kann hierfür eine Listung durchgeführt werden, 
+				wobei über limit die Anzahl der enthaltenen Nachrichten auf bis zu eine Nachricht reduziert, jedoch nicht über 30 erhöht, werden kann. Die 
+				Nachrichten werden in last-in-first out (LIFO) Reihenfolge zurück geliefert. Im Fehlerfall (d.h. die ErpelMessage wurde bereits abgeholt) 
+				wird ein Fault zurückgegeben, der eine MessagingException beinhaltet. Die möglichen FehlerCodes der	MessagingException sind unter 
+				http://doku.erpel.at/doku.php?id=fehlercodes zu finden.
+			</wsdl:documentation>
+			<wsdl:input message="hub:listMessagesRequest" />
+			<wsdl:output message="hub:listMessagesResponse" />
+			<wsdl:fault name="MessagingFault" message="hub:MessagingFault" />
+		</wsdl:operation>
+		<wsdl:operation name="getMessageDetail">
+			<wsdl:documentation>Diese Operation liefert alle Information zu einer einzelnen gesendeten Nachricht zurück. Im Fehlerfall (d.h. die
+				ErpelMessage wurde bereits abgeholt) wird ein Fault zurückgegeben, der eine MessagingException beinhaltet. Die möglichen FehlerCodes der
+				MessagingException sind unter http://doku.erpel.at/doku.php?id=fehlercodes zu finden.
+			</wsdl:documentation>
+			<wsdl:input message="hub:getMessageDetailRequest" />
+			<wsdl:output message="hub:getMessageDetailResponse" />
+			<wsdl:fault name="MessagingFault" message="hub:MessagingFault" />
+		</wsdl:operation>
+	</wsdl:portType>
+	
+	<!--=========================== Bindings =============================== -->
+	<wsdl:binding name="DeliveryBinding" type="hub:DeliveryEndpoint">
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+		<wsdl:operation name="deliverMessage">
+			<soap:operation soapAction="http://messaginghub.erpel.at/DeliverMessage" style="document" />
+			<wsdl:input>
+				<soap:body parts="in" use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body parts="out" use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="MessagingFault">
+				<soap:fault name="MessagingFault" use="literal" />
+			</wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="listMessages">
+			<soap:operation soapAction="http://messaginghub.erpel.at/ListMessages" style="document" />
+			<wsdl:input>
+				<soap:body parts="in" use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body parts="out" use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="MessagingFault">
+				<soap:fault name="MessagingFault" use="literal" />
+			</wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="getMessageDetail">
+			<soap:operation soapAction="http://messaginghub.erpel.at/getMessageDetail" style="document" />
+			<wsdl:input>
+				<soap:body parts="in" use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body parts="out" use="literal" />
+			</wsdl:output>
+			<wsdl:fault name="MessagingFault">
+				<soap:fault name="MessagingFault" use="literal" />
+			</wsdl:fault>
+		</wsdl:operation>
+	</wsdl:binding>
+	
+	<!-- =================== DeliveryService delclaration ================== -->
+	<wsdl:service name="DeliveryService">
+		<wsdl:documentation>Über das DeliveryService werden Nachrichten eingeliefert (siehe http://doku.erpel.at/doku.php?id=deliveryservice)
+		</wsdl:documentation>
+		<wsdl:port name="DeliveryServicePort" binding="hub:DeliveryBinding">
+			<soap:address location="http://localhost:8080/services/delivery" />
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>
